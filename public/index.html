@@ -27,6 +27,7 @@
       --purple: #c4b5fd;
       --white: #fff;
       --black: #000;
+      --gray: #9ca3af;
       --border: 3px solid #000;
       --shadow: 4px 4px 0 #000;
       --shadow-hover: 6px 6px 0 #000;
@@ -92,36 +93,33 @@
     }
 
     .main-section {
-      padding: 60px 24px;
+      padding: 40px 24px;
     }
 
     .hero {
       text-align: center;
-      margin-bottom: 40px;
+      margin-bottom: 32px;
     }
 
     .hero h1 {
-      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
       font-weight: 700;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
       letter-spacing: -0.02em;
     }
 
     .hero p {
-      font-size: 1.1rem;
+      font-size: 1rem;
       color: #374151;
-      max-width: 500px;
-      margin: 0 auto;
     }
 
     .input-card {
       background: var(--white);
       border: var(--border);
       border-radius: 16px;
-      padding: 24px;
+      padding: 20px;
       box-shadow: var(--shadow);
-      max-width: 700px;
-      margin: 0 auto 40px;
+      margin-bottom: 32px;
     }
 
     .input-group {
@@ -201,6 +199,13 @@
       transform: translate(-1px, -1px);
     }
 
+    .btn-success:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: var(--shadow);
+    }
+
     .btn-secondary {
       background: var(--white);
       color: var(--black);
@@ -213,6 +218,11 @@
       background: #f3f4f6;
     }
 
+    .btn-secondary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     .btn-copy {
       background: var(--orange);
       padding: 10px 16px;
@@ -220,15 +230,28 @@
       box-shadow: 2px 2px 0 #000;
     }
 
-    /* 로딩 */
-    .loading {
-      display: none;
-      text-align: center;
-      padding: 60px 20px;
+    .btn-copy:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
-    .loading.show {
-      display: block;
+    /* 로딩 오버레이 */
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(254, 240, 138, 0.9);
+      z-index: 200;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .loading-overlay.show {
+      display: flex;
     }
 
     .spinner {
@@ -238,14 +261,14 @@
       border-top: 4px solid var(--black);
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
-      margin: 0 auto 16px;
+      margin-bottom: 16px;
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    .loading p {
+    .loading-overlay p {
       font-weight: 600;
       font-size: 1.1rem;
     }
@@ -258,34 +281,15 @@
       border-radius: 12px;
       margin-bottom: 24px;
       display: none;
-      max-width: 700px;
-      margin-left: auto;
-      margin-right: auto;
       box-shadow: 3px 3px 0 #000;
     }
 
-    /* 결과 섹션 */
-    .result-section {
-      display: none;
-      animation: slideUp 0.3s ease;
-    }
-
-    .result-section.show {
-      display: block;
-    }
-
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
+    /* 콘텐츠 그리드 */
     .content-grid {
       display: grid;
       grid-template-columns: 1fr 340px;
       gap: 24px;
       align-items: start;
-      max-width: 1000px;
-      margin: 0 auto;
     }
 
     .left-section {
@@ -310,10 +314,6 @@
       box-shadow: var(--shadow);
     }
 
-    .card-blue {
-      background: var(--blue);
-    }
-
     .card-pink {
       background: var(--pink);
     }
@@ -327,14 +327,34 @@
       border: var(--border);
       border-radius: 12px;
       overflow: hidden;
-      background: #000;
+      background: #e5e7eb;
       aspect-ratio: 16/9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .video-container img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      display: none;
+    }
+
+    .video-container img.loaded {
+      display: block;
+    }
+
+    .video-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      color: var(--gray);
+    }
+
+    .video-placeholder.hidden {
+      display: none;
     }
 
     .stats {
@@ -342,6 +362,11 @@
       gap: 20px;
       margin-top: 16px;
       font-weight: 600;
+      color: var(--gray);
+    }
+
+    .stats.loaded {
+      color: var(--black);
     }
 
     .stats span {
@@ -392,6 +417,11 @@
       font-size: 14px;
       max-height: 180px;
       overflow-y: auto;
+      color: var(--gray);
+    }
+
+    .prompt-text.loaded {
+      color: var(--black);
     }
 
     /* 광고 컨테이너 */
@@ -434,7 +464,7 @@
 
     @media (max-width: 600px) {
       .main-section {
-        padding: 40px 16px;
+        padding: 24px 16px;
       }
 
       .input-group {
@@ -450,7 +480,7 @@
       }
 
       .hero h1 {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
       }
     }
 
@@ -479,6 +509,11 @@
     </div>
   </header>
 
+  <div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+    <p>Fetching video info...</p>
+  </div>
+
   <main class="main-section">
     <div class="container">
       <section class="hero">
@@ -504,70 +539,70 @@
         </div>
       </div>
 
-      <div class="loading" id="loading">
-        <div class="spinner"></div>
-        <p>Fetching video info...</p>
-      </div>
-
       <div class="error" id="error"></div>
 
-      <div class="result-section" id="result">
-        <div class="content-grid">
-          <div class="left-section">
-            <div class="card">
-              <div class="video-container">
-                <img id="thumbnail" src="" alt="Video Thumbnail">
+      <div class="content-grid">
+        <div class="left-section">
+          <div class="card">
+            <div class="video-container">
+              <div class="video-placeholder" id="videoPlaceholder">
+                <i data-lucide="video" style="width:48px;height:48px;"></i>
+                <span>Video preview will appear here</span>
               </div>
-              <div class="stats" id="stats"></div>
+              <img id="thumbnail" src="" alt="Video Thumbnail">
             </div>
-
-            <div class="card card-purple prompt-card">
-              <h3>
-                <span><i data-lucide="message-square-text" style="width:20px;height:20px;"></i> Prompt</span>
-                <button class="btn btn-copy" onclick="copyPrompt()">
-                  <i data-lucide="copy" style="width:14px;height:14px;"></i> Copy
-                </button>
-              </h3>
-              <div class="prompt-text" id="promptText"></div>
+            <div class="stats" id="stats">
+              <span><i data-lucide="eye" style="width:16px;height:16px;"></i> ---</span>
+              <span><i data-lucide="heart" style="width:16px;height:16px;"></i> ---</span>
             </div>
           </div>
 
-          <div class="right-section">
-            <div class="card card-pink download-card">
-              <h3><i data-lucide="download" style="width:20px;height:20px;"></i> Download</h3>
-              <div class="download-options">
-                <button class="btn btn-success" onclick="downloadVideo('noWatermark')">
-                  <i data-lucide="sparkles" style="width:18px;height:18px;"></i>
-                  No Watermark (HD)
+          <div class="card card-purple prompt-card">
+            <h3>
+              <span><i data-lucide="message-square-text" style="width:20px;height:20px;"></i> Prompt</span>
+              <button class="btn btn-copy" id="copyBtn" onclick="copyPrompt()" disabled>
+                <i data-lucide="copy" style="width:14px;height:14px;"></i> Copy
+              </button>
+            </h3>
+            <div class="prompt-text" id="promptText">Enter a Sora video URL above to see the prompt...</div>
+          </div>
+        </div>
+
+        <div class="right-section">
+          <div class="card card-pink download-card">
+            <h3><i data-lucide="download" style="width:20px;height:20px;"></i> Download</h3>
+            <div class="download-options">
+              <button class="btn btn-success" id="btnNoWatermark" onclick="downloadVideo('noWatermark')" disabled>
+                <i data-lucide="sparkles" style="width:18px;height:18px;"></i>
+                No Watermark (HD)
+              </button>
+              <div class="download-grid">
+                <button class="btn btn-secondary" id="btnOriginal" onclick="downloadVideo('original')" disabled>
+                  <i data-lucide="video" style="width:16px;height:16px;"></i> Original
                 </button>
-                <div class="download-grid">
-                  <button class="btn btn-secondary" onclick="downloadVideo('original')">
-                    <i data-lucide="video" style="width:16px;height:16px;"></i> Original
-                  </button>
-                  <button class="btn btn-secondary" onclick="downloadVideo('md')">
-                    <i data-lucide="film" style="width:16px;height:16px;"></i> MD
-                  </button>
-                  <button class="btn btn-secondary" onclick="downloadVideo('gif')">
-                    <i data-lucide="image" style="width:16px;height:16px;"></i> GIF
-                  </button>
-                  <button class="btn btn-secondary" onclick="downloadVideo('thumbnail')">
-                    <i data-lucide="image-down" style="width:16px;height:16px;"></i> Thumb
-                  </button>
-                </div>
+                <button class="btn btn-secondary" id="btnMd" onclick="downloadVideo('md')" disabled>
+                  <i data-lucide="film" style="width:16px;height:16px;"></i> MD
+                </button>
+                <button class="btn btn-secondary" id="btnGif" onclick="downloadVideo('gif')" disabled>
+                  <i data-lucide="image" style="width:16px;height:16px;"></i> GIF
+                </button>
+                <button class="btn btn-secondary" id="btnThumb" onclick="downloadVideo('thumbnail')" disabled>
+                  <i data-lucide="image-down" style="width:16px;height:16px;"></i> Thumb
+                </button>
               </div>
             </div>
+          </div>
 
-            <div class="ad-container">
-              <ins class="adsbygoogle"
-                   style="display:block"
-                   data-ad-client="ca-pub-3297361889610977"
-                   data-ad-slot="8890301938"
-                   data-ad-format="auto"
-                   data-full-width-responsive="true"></ins>
-              <script>
-                   (adsbygoogle = window.adsbygoogle || []).push({});
-              </script>
-            </div>
+          <div class="ad-container">
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-3297361889610977"
+                 data-ad-slot="8890301938"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
           </div>
         </div>
       </div>
@@ -579,7 +614,6 @@
   </footer>
 
   <script>
-    // Lucide 아이콘 초기화
     lucide.createIcons();
 
     let videoData = null;
@@ -587,8 +621,20 @@
     const urlInput = document.getElementById('urlInput');
     const fetchBtn = document.getElementById('fetchBtn');
     const loading = document.getElementById('loading');
-    const result = document.getElementById('result');
     const errorDiv = document.getElementById('error');
+    const videoPlaceholder = document.getElementById('videoPlaceholder');
+    const thumbnail = document.getElementById('thumbnail');
+    const stats = document.getElementById('stats');
+    const promptText = document.getElementById('promptText');
+    const copyBtn = document.getElementById('copyBtn');
+
+    const downloadBtns = {
+      noWatermark: document.getElementById('btnNoWatermark'),
+      original: document.getElementById('btnOriginal'),
+      md: document.getElementById('btnMd'),
+      gif: document.getElementById('btnGif'),
+      thumbnail: document.getElementById('btnThumb')
+    };
 
     urlInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
@@ -612,7 +658,6 @@
 
       urlInput.blur();
       hideError();
-      result.classList.remove('show');
       loading.classList.add('show');
       fetchBtn.disabled = true;
 
@@ -640,27 +685,34 @@
     }
 
     function displayResult(data) {
+      // 썸네일 표시
       if (data.thumbnailUrl) {
         const thumbnailUrl = `/api/download?token=${encodeURIComponent(data.thumbnailUrl)}&type=thumbnail`;
-        document.getElementById('thumbnail').src = thumbnailUrl;
+        thumbnail.src = thumbnailUrl;
+        thumbnail.classList.add('loaded');
+        videoPlaceholder.classList.add('hidden');
       }
 
-      const stats = document.getElementById('stats');
+      // 통계 표시
       stats.innerHTML = `
         <span><i data-lucide="eye" style="width:16px;height:16px;"></i> ${data.viewCount || 0}</span>
         <span><i data-lucide="heart" style="width:16px;height:16px;"></i> ${data.likeCount || 0}</span>
       `;
+      stats.classList.add('loaded');
 
-      document.getElementById('promptText').textContent = data.prompt || 'No prompt available';
+      // 프롬프트 표시
+      promptText.textContent = data.prompt || 'No prompt available';
+      promptText.classList.add('loaded');
+      copyBtn.disabled = false;
 
-      result.classList.add('show');
+      // 다운로드 버튼 활성화
+      downloadBtns.noWatermark.disabled = !data.noWatermarkUrl;
+      downloadBtns.original.disabled = !data.originalVideoUrl;
+      downloadBtns.md.disabled = !data.mdVideoUrl;
+      downloadBtns.gif.disabled = !data.gifUrl;
+      downloadBtns.thumbnail.disabled = !data.thumbnailUrl;
 
-      // Lucide 아이콘 다시 렌더링
       lucide.createIcons();
-
-      setTimeout(() => {
-        result.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
     }
 
     function downloadVideo(type) {
@@ -704,14 +756,13 @@
     }
 
     function showCopySuccess() {
-      const btn = document.querySelector('.btn-copy');
-      const originalHTML = btn.innerHTML;
-      btn.innerHTML = '<i data-lucide="check" style="width:14px;height:14px;"></i> Copied!';
-      btn.style.background = '#86efac';
+      const originalHTML = copyBtn.innerHTML;
+      copyBtn.innerHTML = '<i data-lucide="check" style="width:14px;height:14px;"></i> Copied!';
+      copyBtn.style.background = '#86efac';
       lucide.createIcons();
       setTimeout(() => {
-        btn.innerHTML = originalHTML;
-        btn.style.background = '';
+        copyBtn.innerHTML = originalHTML;
+        copyBtn.style.background = '';
         lucide.createIcons();
       }, 1500);
     }
