@@ -108,9 +108,7 @@ app.get('/api/download', async (req, res) => {
   }
 
   try {
-    // ClearSora의 다운로드 URL 구성 (proxy_link 형식)
     const downloadUrl = `https://www.clearsora.com/index.php?proxy_link=${encodeURIComponent(token)}`;
-
     console.log(`Downloading from: ${downloadUrl}`);
 
     const response = await axios({
@@ -120,10 +118,12 @@ app.get('/api/download', async (req, res) => {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Referer': 'https://www.clearsora.com/',
         'Accept': '*/*',
+        'Accept-Encoding': 'identity',
       },
       responseType: 'stream',
-      timeout: 120000,
-      maxRedirects: 10,
+      timeout: 300000,
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
     });
 
     const contentType = response.headers['content-type'] || 'video/mp4';
@@ -141,6 +141,10 @@ app.get('/api/download', async (req, res) => {
     if (response.headers['content-length']) {
       res.setHeader('Content-Length', response.headers['content-length']);
     }
+
+    response.data.on('error', (err) => {
+      console.error('Stream error:', err.message);
+    });
 
     response.data.pipe(res);
   } catch (error) {
