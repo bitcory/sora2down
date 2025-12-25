@@ -6,9 +6,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0a0a0f">
-  <title>TB Sora Downloader</title>
+  <meta name="description" content="Download Sora AI videos without watermark. Fast, free, and easy to use.">
+  <title>TB Sora Downloader - Download Sora Videos Without Watermark</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3297361889610977" crossorigin="anonymous"></script>
   <style>
     * {
@@ -20,24 +21,39 @@
 
     html {
       font-size: 16px;
+      scroll-behavior: smooth;
     }
 
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(180deg, #0a0a0f 0%, #12121a 100%);
+      background: #0a0a0f;
       min-height: 100vh;
-      min-height: -webkit-fill-available;
       color: #fff;
-      line-height: 1.5;
+      line-height: 1.6;
       overflow-x: hidden;
     }
 
+    /* 배경 그라데이션 효과 */
+    .bg-gradient {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background:
+        radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(236, 72, 153, 0.05) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
     .header {
-      background: rgba(10, 10, 15, 0.95);
+      background: rgba(10, 10, 15, 0.8);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 16px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 14px 24px;
       position: sticky;
       top: 0;
       z-index: 100;
@@ -46,61 +62,119 @@
     .header-inner {
       max-width: 1200px;
       margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
     .logo {
       display: flex;
       align-items: center;
       gap: 12px;
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       font-weight: 700;
       color: #fff;
+      text-decoration: none;
     }
 
     .logo-icon {
-      width: 36px;
-      height: 36px;
+      width: 38px;
+      height: 38px;
       background: linear-gradient(135deg, #6366f1, #a855f7);
       border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 800;
-      font-size: 1.1rem;
+      font-size: 1rem;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .nav-links a {
+      color: #9ca3af;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: #fff;
     }
 
     .container {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 32px 24px;
-      padding-bottom: env(safe-area-inset-bottom, 32px);
+      padding: 0 24px;
     }
 
+    /* 히어로 섹션 */
     .hero {
       text-align: center;
-      margin-bottom: 32px;
+      padding: 80px 20px 60px;
+      position: relative;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 8px 16px;
+      border-radius: 50px;
+      font-size: 13px;
+      color: #a5b4fc;
+      margin-bottom: 24px;
+    }
+
+    .hero-badge span {
+      width: 6px;
+      height: 6px;
+      background: #10b981;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
     }
 
     .hero h1 {
-      font-size: clamp(1.5rem, 4vw, 2.2rem);
-      margin-bottom: 8px;
-      background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-weight: 800;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #fff 0%, #6366f1 50%, #a855f7 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      letter-spacing: -0.02em;
     }
 
     .hero p {
       color: #9ca3af;
-      font-size: 0.95rem;
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      max-width: 500px;
+      margin: 0 auto 40px;
     }
 
+    /* 입력 섹션 */
     .input-section {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 20px;
-      padding: 20px;
+      border-radius: 24px;
+      padding: 24px;
       margin-bottom: 32px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     }
 
     .input-group {
@@ -110,7 +184,7 @@
 
     input[type="text"] {
       flex: 1;
-      padding: 16px 18px;
+      padding: 18px 20px;
       font-size: 16px;
       border: 2px solid rgba(255, 255, 255, 0.1);
       border-radius: 14px;
@@ -131,7 +205,7 @@
     }
 
     .btn {
-      padding: 16px 28px;
+      padding: 18px 32px;
       font-size: 16px;
       font-weight: 600;
       border: none;
@@ -152,7 +226,13 @@
     .btn-primary {
       background: linear-gradient(135deg, #6366f1, #8b5cf6);
       color: #fff;
-      min-width: 140px;
+      min-width: 160px;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+      transform: translateY(-1px);
     }
 
     .btn-primary:disabled {
@@ -168,24 +248,127 @@
       font-size: 17px;
       border-radius: 16px;
       width: 100%;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
     }
 
     .btn-secondary {
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.06);
       color: #fff;
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       padding: 14px 16px;
       font-size: 14px;
       width: 100%;
     }
 
-    .btn-secondary:active {
-      background: rgba(255, 255, 255, 0.12);
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
     }
 
+    /* How to Use 섹션 */
+    .how-to-use {
+      padding: 60px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .section-title h2 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .section-title p {
+      color: #9ca3af;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .step-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 20px;
+      padding: 32px 24px;
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    .step-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateY(-4px);
+    }
+
+    .step-number {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.2rem;
+      margin: 0 auto 20px;
+    }
+
+    .step-card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+    }
+
+    .step-card p {
+      color: #9ca3af;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* Features 섹션 */
+    .features {
+      padding: 60px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 24px 20px;
+      text-align: center;
+    }
+
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 14px;
+    }
+
+    .feature-card h4 {
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+    }
+
+    .feature-card p {
+      color: #6b7280;
+      font-size: 13px;
+    }
+
+    /* 결과 섹션 */
     .result-section {
       display: none;
       animation: slideUp 0.4s ease;
+      padding-bottom: 40px;
     }
 
     .result-section.show {
@@ -197,7 +380,6 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* 2분할 레이아웃 */
     .content-grid {
       display: grid;
       grid-template-columns: 1fr 380px;
@@ -217,19 +399,6 @@
       display: flex;
       flex-direction: column;
       gap: 20px;
-    }
-
-    /* 광고 컨테이너 */
-    .ad-container {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 16px;
-      padding: 16px 12px;
-    }
-
-    .ad-container ins {
-      display: block;
-      width: 100%;
     }
 
     .card {
@@ -261,12 +430,6 @@
       font-size: 14px;
     }
 
-    .stats span {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
     .download-card {
       display: flex;
       flex-direction: column;
@@ -292,11 +455,6 @@
       margin-bottom: 14px;
     }
 
-    .prompt-header h3 {
-      color: #fff;
-      font-size: 1rem;
-    }
-
     .prompt-text {
       background: rgba(0, 0, 0, 0.4);
       border-radius: 14px;
@@ -307,9 +465,22 @@
       max-height: 200px;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      word-break: break-word;
     }
 
+    /* 광고 컨테이너 */
+    .ad-container {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 16px 12px;
+    }
+
+    .ad-container ins {
+      display: block;
+      width: 100%;
+    }
+
+    /* 로딩 */
     .loading {
       display: none;
       text-align: center;
@@ -334,11 +505,6 @@
       to { transform: rotate(360deg); }
     }
 
-    .loading p {
-      color: #9ca3af;
-      font-size: 16px;
-    }
-
     .error {
       background: rgba(239, 68, 68, 0.1);
       border: 1px solid rgba(239, 68, 68, 0.2);
@@ -347,30 +513,69 @@
       border-radius: 14px;
       margin-bottom: 20px;
       display: none;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* 푸터 */
+    .footer {
+      text-align: center;
+      padding: 40px 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      margin-top: 60px;
+    }
+
+    .footer p {
+      color: #6b7280;
       font-size: 14px;
     }
 
-    .footer {
-      text-align: center;
-      margin-top: 48px;
-      padding: 24px;
-      color: #6b7280;
-      font-size: 13px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 16px;
     }
 
-    /* 태블릿 */
+    .footer-links a {
+      color: #6b7280;
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: #fff;
+    }
+
+    /* 반응형 */
     @media (max-width: 960px) {
       .content-grid {
         grid-template-columns: 1fr 320px;
-        gap: 20px;
+      }
+
+      .steps-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+
+      .features-grid {
+        grid-template-columns: repeat(2, 1fr);
       }
     }
 
-    /* 모바일 */
     @media (max-width: 768px) {
-      .container {
-        padding: 24px 16px;
+      .header-inner {
+        flex-direction: row;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .hero {
+        padding: 50px 16px 40px;
       }
 
       .input-group {
@@ -383,33 +588,32 @@
 
       .content-grid {
         grid-template-columns: 1fr;
-        gap: 16px;
       }
 
       .right-section {
         position: static;
       }
 
-      .card {
-        padding: 20px;
-      }
-
-      .download-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-
-    /* 작은 모바일 */
-    @media (max-width: 380px) {
-      .download-grid {
+      .steps-grid {
         grid-template-columns: 1fr;
       }
+
+      .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .step-card {
+        padding: 24px 20px;
+      }
     }
 
-    /* iOS Safari 하단 바 대응 */
-    @supports (padding-bottom: env(safe-area-inset-bottom)) {
-      .container {
-        padding-bottom: calc(32px + env(safe-area-inset-bottom));
+    @media (max-width: 480px) {
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .download-grid {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -429,108 +633,182 @@
   </style>
 </head>
 <body>
+  <div class="bg-gradient"></div>
+
   <header class="header">
     <div class="header-inner">
-      <div class="logo">
+      <a href="/" class="logo">
         <div class="logo-icon">TB</div>
         <span>TB Sora Downloader</span>
-      </div>
+      </a>
+      <nav class="nav-links">
+        <a href="#how-to-use">How to Use</a>
+        <a href="#features">Features</a>
+      </nav>
     </div>
   </header>
 
-  <main class="container">
-    <div class="hero">
-      <h1>TB Sora Downloader</h1>
-      <p>Download Sora AI videos without watermark</p>
-    </div>
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="hero-badge">
+          <span></span>
+          Free & No Login Required
+        </div>
+        <h1>Download Sora Videos<br>Without Watermark</h1>
+        <p>The fastest way to download OpenAI Sora AI-generated videos in HD quality without watermark.</p>
+      </div>
+    </section>
 
-    <div class="input-section">
-      <div class="input-group">
-        <input
-          type="text"
-          id="urlInput"
-          placeholder="Paste Sora URL here..."
-          autocomplete="off"
-          autocorrect="off"
-          autocapitalize="off"
-          spellcheck="false"
-        >
-        <button class="btn btn-primary" id="fetchBtn" onclick="fetchVideo()">
-          Fetch Video
-        </button>
+    <div class="container">
+      <div class="input-section">
+        <div class="input-group">
+          <input
+            type="text"
+            id="urlInput"
+            placeholder="Paste Sora video URL here..."
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+          >
+          <button class="btn btn-primary" id="fetchBtn" onclick="fetchVideo()">
+            Fetch Video
+          </button>
+        </div>
+      </div>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Fetching video information...</p>
+      </div>
+
+      <div class="error" id="error"></div>
+
+      <div class="result-section" id="result">
+        <div class="content-grid">
+          <div class="left-section">
+            <div class="card">
+              <div class="video-container">
+                <img id="thumbnail" src="" alt="Video Thumbnail">
+              </div>
+              <div class="stats" id="stats"></div>
+            </div>
+
+            <div class="card">
+              <div class="prompt-header">
+                <h3>Prompt</h3>
+                <button class="btn btn-secondary" style="width:auto;padding:10px 20px;" onclick="copyPrompt()">Copy</button>
+              </div>
+              <div class="prompt-text" id="promptText"></div>
+            </div>
+          </div>
+
+          <div class="right-section">
+            <div class="card download-card">
+              <h3>Download Options</h3>
+              <button class="btn btn-success" onclick="downloadVideo('noWatermark')">
+                Download (No Watermark)
+              </button>
+              <div class="download-grid">
+                <button class="btn btn-secondary" onclick="downloadVideo('original')">
+                  Watermarked
+                </button>
+                <button class="btn btn-secondary" onclick="downloadVideo('md')">
+                  MD Video
+                </button>
+                <button class="btn btn-secondary" onclick="downloadVideo('gif')">
+                  GIF
+                </button>
+                <button class="btn btn-secondary" onclick="downloadVideo('thumbnail')">
+                  Thumbnail
+                </button>
+              </div>
+            </div>
+
+            <div class="ad-container">
+              <ins class="adsbygoogle"
+                   style="display:block"
+                   data-ad-client="ca-pub-3297361889610977"
+                   data-ad-slot="8890301938"
+                   data-ad-format="auto"
+                   data-full-width-responsive="true"></ins>
+              <script>
+                   (adsbygoogle = window.adsbygoogle || []).push({});
+              </script>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="loading" id="loading">
-      <div class="spinner"></div>
-      <p>Fetching video...</p>
-    </div>
-
-    <div class="error" id="error"></div>
-
-    <div class="result-section" id="result">
-      <div class="content-grid">
-        <!-- 왼쪽: 비디오 프리뷰 + 프롬프트 -->
-        <div class="left-section">
-          <div class="card">
-            <div class="video-container">
-              <img id="thumbnail" src="" alt="Thumbnail">
-            </div>
-            <div class="stats" id="stats"></div>
-          </div>
-
-          <div class="card">
-            <div class="prompt-header">
-              <h3>Prompt</h3>
-              <button class="btn btn-secondary" style="width:auto;padding:10px 20px;" onclick="copyPrompt()">Copy</button>
-            </div>
-            <div class="prompt-text" id="promptText"></div>
-          </div>
+    <section class="how-to-use" id="how-to-use">
+      <div class="container">
+        <div class="section-title">
+          <h2>How to Use</h2>
+          <p>Download your Sora videos in 3 simple steps</p>
         </div>
-
-        <!-- 오른쪽: 다운로드 메뉴 + 광고 -->
-        <div class="right-section">
-          <div class="card download-card">
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-number">1</div>
+            <h3>Copy Video URL</h3>
+            <p>Go to Sora and copy the share link of the video you want to download.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-number">2</div>
+            <h3>Paste & Fetch</h3>
+            <p>Paste the URL in the input box above and click the Fetch Video button.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-number">3</div>
             <h3>Download</h3>
-            <button class="btn btn-success" onclick="downloadVideo('noWatermark')">
-              Download (No Watermark)
-            </button>
-            <div class="download-grid">
-              <button class="btn btn-secondary" onclick="downloadVideo('original')">
-                Watermarked
-              </button>
-              <button class="btn btn-secondary" onclick="downloadVideo('md')">
-                MD Video
-              </button>
-              <button class="btn btn-secondary" onclick="downloadVideo('gif')">
-                GIF
-              </button>
-              <button class="btn btn-secondary" onclick="downloadVideo('thumbnail')">
-                Thumbnail
-              </button>
-            </div>
-          </div>
-
-          <!-- 애드센스 광고 -->
-          <div class="ad-container">
-            <ins class="adsbygoogle"
-                 style="display:block"
-                 data-ad-client="ca-pub-3297361889610977"
-                 data-ad-slot="8890301938"
-                 data-ad-format="auto"
-                 data-full-width-responsive="true"></ins>
-            <script>
-                 (adsbygoogle = window.adsbygoogle || []).push({});
-            </script>
+            <p>Choose your preferred format and download the video without watermark.</p>
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="footer">
-      <p>TB Sora Downloader</p>
-    </div>
+    <section class="features" id="features">
+      <div class="container">
+        <div class="section-title">
+          <h2>Features</h2>
+          <p>Everything you need to download Sora videos</p>
+        </div>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🚀</div>
+            <h4>Fast Download</h4>
+            <p>Lightning-fast processing</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">✨</div>
+            <h4>No Watermark</h4>
+            <p>Clean, watermark-free videos</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🎬</div>
+            <h4>HD Quality</h4>
+            <p>Original quality preserved</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🆓</div>
+            <h4>100% Free</h4>
+            <p>No payment required</p>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>TB Sora Downloader - Download Sora AI Videos Without Watermark</p>
+      <div class="footer-links">
+        <a href="#how-to-use">How to Use</a>
+        <a href="#features">Features</a>
+      </div>
+    </div>
+  </footer>
 
   <script>
     let videoData = null;
@@ -548,10 +826,6 @@
       }
     });
 
-    urlInput.addEventListener('blur', () => {
-      window.scrollTo(0, 0);
-    });
-
     async function fetchVideo() {
       const url = urlInput.value.trim();
 
@@ -561,7 +835,7 @@
       }
 
       if (!url.includes('sora.chatgpt.com') && !url.includes('sora.openai.com')) {
-        showError('Invalid URL. Please enter a valid Sora URL.');
+        showError('Invalid URL. Please enter a valid Sora video URL.');
         return;
       }
 
@@ -602,8 +876,8 @@
 
       const stats = document.getElementById('stats');
       stats.innerHTML = `
-        <span>Views: ${data.viewCount || 0}</span>
-        <span>Likes: ${data.likeCount || 0}</span>
+        <span>👁 ${data.viewCount || 0} views</span>
+        <span>❤️ ${data.likeCount || 0} likes</span>
       `;
 
       document.getElementById('promptText').textContent = data.prompt || 'No prompt available';
@@ -629,7 +903,7 @@
       }
 
       if (!token) {
-        showError('Download not available');
+        showError('Download not available for this option');
         return;
       }
 
@@ -642,7 +916,7 @@
 
       if (navigator.clipboard) {
         navigator.clipboard.writeText(videoData.prompt).then(() => {
-          showCopySuccess();
+          showCopySuccess(event.target);
         });
       } else {
         const textarea = document.createElement('textarea');
@@ -651,15 +925,14 @@
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        showCopySuccess();
+        showCopySuccess(event.target);
       }
     }
 
-    function showCopySuccess() {
-      const btn = event.target;
+    function showCopySuccess(btn) {
       const originalText = btn.textContent;
       btn.textContent = 'Copied!';
-      btn.style.background = '#10b981';
+      btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
       setTimeout(() => {
         btn.textContent = originalText;
         btn.style.background = '';
