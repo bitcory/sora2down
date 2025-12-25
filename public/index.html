@@ -9,6 +9,7 @@
   <title>TB Sora Downloader</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3297361889610977" crossorigin="anonymous"></script>
   <style>
     * {
       margin: 0;
@@ -213,6 +214,27 @@
     .right-section {
       position: sticky;
       top: 100px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* 광고 컨테이너 */
+    .ad-container {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 16px 12px;
+      min-height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ad-container ins {
+      width: 100% !important;
+      max-width: 336px;
+      margin: 0 auto;
     }
 
     .card {
@@ -471,7 +493,7 @@
           </div>
         </div>
 
-        <!-- 오른쪽: 다운로드 메뉴 -->
+        <!-- 오른쪽: 다운로드 메뉴 + 광고 -->
         <div class="right-section">
           <div class="card download-card">
             <h3>Download</h3>
@@ -492,6 +514,19 @@
                 Thumbnail
               </button>
             </div>
+          </div>
+
+          <!-- 애드센스 광고 -->
+          <div class="ad-container">
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-3297361889610977"
+                 data-ad-slot="8890301938"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
           </div>
         </div>
       </div>
