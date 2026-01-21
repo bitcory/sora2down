@@ -674,7 +674,7 @@
 
       <div class="input-card">
         <div class="input-group">
-          <input type="text" id="urlInput" placeholder="Sora 영상 URL을 여기에 붙여넣으세요..." autocomplete="off" autocorrect="off"
+          <input type="text" id="urlInput" placeholder="Sora URL, Oiioii URL, 또는 비디오 ID (mko5xxx, mko5yyy, ...)" autocomplete="off" autocorrect="off"
             autocapitalize="off" spellcheck="false">
           <button class="btn btn-primary" id="fetchBtn" onclick="fetchVideo()">
             <i data-lucide="search" style="width:18px;height:18px;"></i>
@@ -746,6 +746,7 @@
 
     let videoData = null;
     let oiioiiProjectUrl = null;
+    let oiioiiVideoIds = null;
 
     const urlInput = document.getElementById('urlInput');
     const fetchBtn = document.getElementById('fetchBtn');
@@ -779,8 +780,11 @@
         return;
       }
 
-      if (!url.includes('sora.chatgpt.com') && !url.includes('sora.openai.com') && !url.includes('oiioii.ai')) {
-        showError('올바르지 않은 URL입니다. Sora 또는 Oiioii URL을 입력해주세요.');
+      // mko5 ID 패턴 체크 (비디오 ID 직접 입력)
+      const isMkoIds = url.match(/mko5[a-z0-9_]+/gi);
+
+      if (!url.includes('sora.chatgpt.com') && !url.includes('sora.openai.com') && !url.includes('oiioii.ai') && !isMkoIds) {
+        showError('올바르지 않은 URL입니다. Sora, Oiioii URL 또는 비디오 ID를 입력해주세요.');
         return;
       }
 
@@ -793,6 +797,17 @@
       const isOiioiiProject = url.includes('oiioii.ai/space/') || url.includes('oiioii.ai/project/');
 
       try {
+        // 비디오 ID 직접 입력 체크
+        if (isMkoIds && isMkoIds.length > 0 && !url.includes('oiioii.ai')) {
+          const uniqueIds = [...new Set(isMkoIds)];
+          oiioiiProjectUrl = null;
+          oiioiiVideoIds = uniqueIds;
+          displayOiioiiProject({ count: uniqueIds.length, videos: uniqueIds.map(id => ({ id })) });
+          loading.classList.remove('show');
+          fetchBtn.disabled = false;
+          return;
+        }
+
         if (isOiioiiProject) {
           // 프로젝트 URL: 비디오 목록 조회
           const response = await fetch('/api/oiioii/list', {
@@ -862,14 +877,18 @@
     }
 
     async function downloadOiioiiZip() {
-      if (!oiioiiProjectUrl) return;
+      if (!oiioiiVideoIds && !oiioiiProjectUrl) return;
 
       btnZip.disabled = true;
       btnZip.innerHTML = '<i data-lucide="loader" style="width:18px;height:18px;"></i> 다운로드 중...';
       lucide.createIcons();
 
       // ZIP 다운로드 시작
-      window.location.href = `/api/oiioii/download-all?url=${encodeURIComponent(oiioiiProjectUrl)}`;
+      if (oiioiiVideoIds) {
+        window.location.href = `/api/oiioii/download-ids?ids=${encodeURIComponent(oiioiiVideoIds.join(','))}`;
+      } else {
+        window.location.href = `/api/oiioii/download-all?url=${encodeURIComponent(oiioiiProjectUrl)}`;
+      }
 
       // 버튼 복구 (다운로드가 시작된 후)
       setTimeout(() => {

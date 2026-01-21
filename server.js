@@ -4,6 +4,7 @@ const path = require('path');
 const https = require('https');
 const http = require('http');
 const archiver = require('archiver');
+const puppeteer = require('puppeteer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -110,25 +111,57 @@ async function fetchFromOiioii(oiioiiUrl) {
   });
 }
 
-// oiioii.ai 프로젝트 페이지에서 비디오 ID 추출
+// oiioii.ai 프로젝트 페이지에서 비디오 ID 추출 (Puppeteer + 네트워크 감시)
 async function fetchOiioiiProjectVideos(projectUrl) {
-  return new Promise((resolve, reject) => {
-    https.get(projectUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  let browser;
+  try {
+    browser = await puppeteer.launch({
+      headless: 'new',
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+    const page = await browser.newPage();
+
+    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+
+    // 네트워크 요청에서 비디오 ID 수집
+    const videoIds = new Set();
+
+    page.on('request', request => {
+      const url = request.url();
+      const matches = url.match(/mko5[a-z0-9_]+/gi);
+      if (matches) {
+        matches.forEach(id => videoIds.add(id));
       }
-    }, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        // mko5로 시작하는 비디오 ID 패턴 추출
-        const matches = data.match(/mko5[a-z0-9_]+/gi) || [];
-        const uniqueIds = [...new Set(matches)];
-        resolve(uniqueIds);
-      });
-    }).on('error', reject);
-  });
+    });
+
+    page.on('response', async response => {
+      const url = response.url();
+      const matches = url.match(/mko5[a-z0-9_]+/gi);
+      if (matches) {
+        matches.forEach(id => videoIds.add(id));
+      }
+    });
+
+    await page.goto(projectUrl, { waitUntil: 'networkidle2', timeout: 30000 });
+
+    // 추가 대기 (동적 콘텐츠 로드)
+    await new Promise(r => setTimeout(r, 5000));
+
+    // 페이지 HTML에서도 추가로 찾기
+    const htmlIds = await page.evaluate(() => {
+      const html = document.body.innerHTML;
+      const matches = html.match(/mko5[a-z0-9_]+/gi) || [];
+      return matches;
+    });
+
+    htmlIds.forEach(id => videoIds.add(id));
+
+    console.log(`Found ${videoIds.size} video IDs: ${[...videoIds].join(', ')}`);
+
+    return [...videoIds];
+  } finally {
+    if (browser) await browser.close();
+  }
 }
 
 // oiioii.ai 비디오 다운로드 (버퍼로 반환)
@@ -330,7 +363,19 @@ app.all('/api/oiioii/download-all', async (req, res) => {
 
 // oiioii.ai 프로젝트 비디오 목록 조회
 app.post('/api/oiioii/list', async (req, res) => {
-  const { url } = req.body;
+  const { url, videoIds: inputIds } = req.body;
+
+  // 직접 ID 목록을 받은 경우
+  if (inputIds && inputIds.length > 0) {
+    return res.json({
+      success: true,
+      count: inputIds.length,
+      videos: inputIds.map(id => ({
+        id,
+        downloadUrl: `https://api.oiioii.ai/res/read_file?uri=hogi://video/${id}.mp4`
+      }))
+    });
+  }
 
   if (!url || !url.includes('oiioii.ai')) {
     return res.status(400).json({ error: 'Valid oiioii.ai project URL required' });
@@ -348,6 +393,53 @@ app.post('/api/oiioii/list', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// oiioii.ai 비디오 ID 목록으로 직접 ZIP 다운로드
+app.all('/api/oiioii/download-ids', async (req, res) => {
+  const idsParam = req.body.ids || req.query.ids;
+
+  if (!idsParam) {
+    return res.status(400).json({ error: 'Video IDs required' });
+  }
+
+  // 쉼표 또는 공백으로 구분된 ID 파싱
+  const videoIds = idsParam.split(/[,\s]+/).filter(id => id.match(/^mko5[a-z0-9_]+$/i));
+
+  if (videoIds.length === 0) {
+    return res.status(400).json({ error: 'No valid video IDs found' });
+  }
+
+  try {
+    console.log(`Downloading ${videoIds.length} videos: ${videoIds.join(', ')}`);
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename="oiioii-videos.zip"');
+
+    const archive = archiver('zip', { zlib: { level: 5 } });
+    archive.pipe(res);
+
+    for (let i = 0; i < videoIds.length; i++) {
+      const videoId = videoIds[i];
+      console.log(`Downloading ${i + 1}/${videoIds.length}: ${videoId}`);
+
+      try {
+        const videoBuffer = await downloadOiioiiVideo(videoId);
+        archive.append(videoBuffer, { name: `${videoId}.mp4` });
+      } catch (err) {
+        console.error(`Failed to download ${videoId}: ${err.message}`);
+      }
+    }
+
+    await archive.finalize();
+    console.log('ZIP download complete');
+
+  } catch (error) {
+    console.error('Download error:', error.message);
+    if (!res.headersSent) {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 
