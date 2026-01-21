@@ -13,8 +13,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
     rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3297361889610977"
-    crossorigin="anonymous"></script>
   <style>
     * {
       margin: 0;
@@ -696,6 +694,7 @@
                 <span>영상 미리보기가 여기에 표시됩니다</span>
               </div>
               <img id="thumbnail" src="" alt="영상 썸네일">
+              <video id="videoPreview" src="" controls playsinline style="width:100%;height:100%;object-fit:contain;display:none;"></video>
             </div>
             <div class="stats" id="stats">
               <span><i data-lucide="eye" style="width:16px;height:16px;"></i> ---</span>
@@ -728,13 +727,6 @@
             </div>
           </div>
 
-          <div class="ad-container">
-            <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-3297361889610977"
-              data-ad-slot="8890301938" data-ad-format="auto" data-full-width-responsive="true"></ins>
-            <script>
-              (adsbygoogle = window.adsbygoogle || []).push({});
-            </script>
-          </div>
         </div>
       </div>
     </div>
@@ -779,8 +771,8 @@
         return;
       }
 
-      if (!url.includes('sora.chatgpt.com') && !url.includes('sora.openai.com')) {
-        showError('올바르지 않은 URL입니다. Sora 영상 URL을 입력해주세요.');
+      if (!url.includes('sora.chatgpt.com') && !url.includes('sora.openai.com') && !url.includes('oiioii.ai')) {
+        showError('올바르지 않은 URL입니다. Sora 또는 Oiioii 영상 URL을 입력해주세요.');
         return;
       }
 
@@ -812,12 +804,22 @@
       }
     }
 
+    const videoPreview = document.getElementById('videoPreview');
+
     function displayResult(data) {
-      // 썸네일 표시
+      // 썸네일 또는 비디오 미리보기 표시
       if (data.thumbnailUrl) {
         const thumbnailUrl = `/api/download?url=${encodeURIComponent(data.thumbnailUrl)}&type=thumbnail`;
         thumbnail.src = thumbnailUrl;
         thumbnail.classList.add('loaded');
+        videoPreview.style.display = 'none';
+        videoPlaceholder.classList.add('hidden');
+      } else if (data.videoUrl) {
+        // 썸네일이 없으면 비디오로 미리보기
+        const videoUrl = `/api/download?url=${encodeURIComponent(data.videoUrl)}&type=video`;
+        videoPreview.src = videoUrl;
+        videoPreview.style.display = 'block';
+        thumbnail.classList.remove('loaded');
         videoPlaceholder.classList.add('hidden');
       }
 
