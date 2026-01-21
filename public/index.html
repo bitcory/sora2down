@@ -4,7 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="icon" href="data:,">
   <meta name="theme-color" content="#fef08a">
   <meta name="description" content="Sora AI 영상을 워터마크 없이 다운로드하세요. 빠르고, 무료이며, 사용하기 쉽습니다.">
   <title>TB Sora2 다운로더 - 워터마크 없이 Sora2 영상 다운로드</title>
@@ -717,24 +718,13 @@
           <div class="card card-pink download-card">
             <h3><i data-lucide="download" style="width:20px;height:20px;"></i> 다운로드</h3>
             <div class="download-options">
-              <button class="btn btn-success" id="btnNoWatermark" onclick="downloadVideo('noWatermark')" disabled>
+              <button class="btn btn-success" id="btnVideo" onclick="downloadVideo('video')" disabled>
                 <i data-lucide="sparkles" style="width:18px;height:18px;"></i>
-                워터마크 없음 (HD)
+                비디오 다운로드 (HD)
               </button>
-              <div class="download-grid">
-                <button class="btn btn-secondary" id="btnOriginal" onclick="downloadVideo('original')" disabled>
-                  <i data-lucide="video" style="width:16px;height:16px;"></i> 원본
-                </button>
-                <button class="btn btn-secondary" id="btnMd" onclick="downloadVideo('md')" disabled>
-                  <i data-lucide="film" style="width:16px;height:16px;"></i> MD
-                </button>
-                <button class="btn btn-secondary" id="btnGif" onclick="downloadVideo('gif')" disabled>
-                  <i data-lucide="image" style="width:16px;height:16px;"></i> GIF
-                </button>
-                <button class="btn btn-secondary" id="btnThumb" onclick="downloadVideo('thumbnail')" disabled>
-                  <i data-lucide="image-down" style="width:16px;height:16px;"></i> 썸네일
-                </button>
-              </div>
+              <button class="btn btn-secondary" id="btnThumb" onclick="downloadVideo('thumbnail')" disabled style="width:100%;">
+                <i data-lucide="image-down" style="width:16px;height:16px;"></i> 썸네일 다운로드
+              </button>
             </div>
           </div>
 
@@ -770,10 +760,7 @@
     const copyBtn = document.getElementById('copyBtn');
 
     const downloadBtns = {
-      noWatermark: document.getElementById('btnNoWatermark'),
-      original: document.getElementById('btnOriginal'),
-      md: document.getElementById('btnMd'),
-      gif: document.getElementById('btnGif'),
+      video: document.getElementById('btnVideo'),
       thumbnail: document.getElementById('btnThumb')
     };
 
@@ -828,18 +815,19 @@
     function displayResult(data) {
       // 썸네일 표시
       if (data.thumbnailUrl) {
-        const thumbnailUrl = `/api/download?token=${encodeURIComponent(data.thumbnailUrl)}&type=thumbnail`;
+        const thumbnailUrl = `/api/download?url=${encodeURIComponent(data.thumbnailUrl)}&type=thumbnail`;
         thumbnail.src = thumbnailUrl;
         thumbnail.classList.add('loaded');
         videoPlaceholder.classList.add('hidden');
       }
 
-      // 통계 표시
-      stats.innerHTML = `
-        <span><i data-lucide="eye" style="width:16px;height:16px;"></i> ${data.viewCount || 0}</span>
-        <span><i data-lucide="heart" style="width:16px;height:16px;"></i> ${data.likeCount || 0}</span>
-      `;
-      stats.classList.add('loaded');
+      // 작성자 표시
+      if (data.title) {
+        stats.innerHTML = `
+          <span><i data-lucide="user" style="width:16px;height:16px;"></i> ${data.title}</span>
+        `;
+        stats.classList.add('loaded');
+      }
 
       // 프롬프트 표시
       promptText.textContent = data.prompt || '프롬프트 없음';
@@ -847,10 +835,7 @@
       copyBtn.disabled = false;
 
       // 다운로드 버튼 활성화
-      downloadBtns.noWatermark.disabled = !data.noWatermarkUrl;
-      downloadBtns.original.disabled = !data.originalVideoUrl;
-      downloadBtns.md.disabled = !data.mdVideoUrl;
-      downloadBtns.gif.disabled = !data.gifUrl;
+      downloadBtns.video.disabled = !data.videoUrl;
       downloadBtns.thumbnail.disabled = !data.thumbnailUrl;
 
       lucide.createIcons();
@@ -859,22 +844,19 @@
     function downloadVideo(type) {
       if (!videoData) return;
 
-      let token;
-      switch (type) {
-        case 'noWatermark': token = videoData.noWatermarkUrl; break;
-        case 'original': token = videoData.originalVideoUrl; break;
-        case 'md': token = videoData.mdVideoUrl; break;
-        case 'gif': token = videoData.gifUrl; break;
-        case 'thumbnail': token = videoData.thumbnailUrl; break;
-        default: token = videoData.noWatermarkUrl;
+      let url;
+      if (type === 'video') {
+        url = videoData.videoUrl;
+      } else if (type === 'thumbnail') {
+        url = videoData.thumbnailUrl;
       }
 
-      if (!token) {
-        showError('이 옵션은 다운로드할 수 없습니다');
+      if (!url) {
+        showError('다운로드할 수 없습니다');
         return;
       }
 
-      const downloadUrl = `/api/download?token=${encodeURIComponent(token)}&type=${type}`;
+      const downloadUrl = `/api/download?url=${encodeURIComponent(url)}&type=${type}`;
       window.location.href = downloadUrl;
     }
 

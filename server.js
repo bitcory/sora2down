@@ -1,7 +1,9 @@
 const express = require('express');
-const axios = require('axios');
+const puppeteer = require('puppeteer');
 const cors = require('cors');
 const path = require('path');
+const https = require('https');
+const http = require('http');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,48 +13,136 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// ClearSora API를 통해 비디오 정보 가져오기
-async function fetchFromClearSora(soraUrl) {
-  try {
-    const response = await axios.post(
-      'https://www.clearsora.com/index.php',
-      `sora_url=${encodeURIComponent(soraUrl)}`,
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Origin': 'https://www.clearsora.com',
-          'Referer': 'https://www.clearsora.com/',
-        },
-        timeout: 30000,
-      }
-    );
+// Browser instance for reuse
+let browserInstance = null;
 
-    return response.data;
-  } catch (error) {
-    if (error.response) {
-      throw new Error(`ClearSora API error: ${error.response.status}`);
+async function getBrowser() {
+  if (!browserInstance || !browserInstance.isConnected()) {
+    browserInstance = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--autoplay-policy=no-user-gesture-required'
+      ]
+    });
+  }
+  return browserInstance;
+}
+
+// Puppeteer를 사용해서 Sora 비디오 정보 가져오기
+async function fetchFromSora(soraUrl) {
+  const browser = await getBrowser();
+  const page = await browser.newPage();
+
+  // Collect video URLs from network
+  let networkVideoUrl = null;
+
+  page.on('response', async (response) => {
+    const url = response.url();
+    const contentType = response.headers()['content-type'] || '';
+    if ((url.includes('videos.openai.com') && url.includes('/raw')) || contentType.includes('video/mp4')) {
+      networkVideoUrl = url;
     }
-    throw error;
+  });
+
+  try {
+    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await page.setViewport({ width: 1280, height: 720 });
+
+    console.log(`Navigating to: ${soraUrl}`);
+    await page.goto(soraUrl, { waitUntil: 'networkidle2', timeout: 60000 });
+
+    // Wait for video element with longer timeout
+    try {
+      await page.waitForSelector('video', { timeout: 20000 });
+      console.log('Video element found');
+    } catch (e) {
+      console.log('Video element not found, checking page content...');
+    }
+
+    // Wait for video src to be set
+    await new Promise(r => setTimeout(r, 5000));
+
+    // Extract video info
+    const videoInfo = await page.evaluate(() => {
+      const result = {
+        videoUrl: null,
+        thumbnailUrl: null,
+        prompt: null,
+        title: null
+      };
+
+      // Get video element
+      const video = document.querySelector('video');
+      if (video) {
+        result.videoUrl = video.src || video.currentSrc;
+        result.thumbnailUrl = video.poster;
+      }
+
+      // Get meta tags
+      const ogDesc = document.querySelector('meta[property="og:description"]');
+      const ogTitle = document.querySelector('meta[property="og:title"]');
+      const ogImage = document.querySelector('meta[property="og:image"]');
+
+      if (ogDesc) result.prompt = ogDesc.getAttribute('content');
+      if (ogTitle) result.title = ogTitle.getAttribute('content');
+      if (!result.thumbnailUrl && ogImage) {
+        result.thumbnailUrl = ogImage.getAttribute('content');
+      }
+
+      return result;
+    });
+
+    // Use network captured URL if page extraction failed
+    if (!videoInfo.videoUrl && networkVideoUrl) {
+      console.log('Using network captured video URL');
+      videoInfo.videoUrl = networkVideoUrl;
+    }
+
+    return videoInfo;
+  } finally {
+    await page.close();
   }
 }
 
-// Base64 디코딩 (ClearSora의 URL 형식)
-function decodeVideoUrl(encoded) {
-  if (!encoded) return null;
-  try {
-    // ClearSora는 특수한 인코딩을 사용하는 것 같음
-    // 직접 Base64 디코딩 시도
-    const decoded = Buffer.from(encoded, 'base64').toString('utf-8');
-    // URL 형식인지 확인
-    if (decoded.startsWith('http')) {
-      return decoded;
-    }
-    // 아니면 원본 반환 (프록시에서 처리)
-    return encoded;
-  } catch (e) {
-    return encoded;
-  }
+// oiioii.ai URL에서 리다이렉트된 실제 비디오 URL 가져오기
+async function fetchFromOiioii(oiioiiUrl) {
+  return new Promise((resolve, reject) => {
+    const protocol = oiioiiUrl.startsWith('https') ? https : http;
+
+    const req = protocol.get(oiioiiUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      }
+    }, (res) => {
+      if (res.statusCode === 302 || res.statusCode === 301) {
+        const redirectUrl = res.headers.location;
+        resolve({
+          videoUrl: redirectUrl,
+          thumbnailUrl: null,
+          prompt: null,
+          title: 'Oiioii Video'
+        });
+      } else if (res.statusCode === 200) {
+        // 직접 비디오 URL인 경우
+        resolve({
+          videoUrl: oiioiiUrl,
+          thumbnailUrl: null,
+          prompt: null,
+          title: 'Oiioii Video'
+        });
+      } else {
+        reject(new Error(`Unexpected status code: ${res.statusCode}`));
+      }
+    });
+
+    req.on('error', (err) => {
+      reject(err);
+    });
+  });
 }
 
 // API: 비디오 정보 가져오기
@@ -63,133 +153,117 @@ app.post('/api/fetch', async (req, res) => {
     return res.status(400).json({ error: 'URL is required' });
   }
 
-  if (!url.includes('sora.chatgpt.com') && !url.includes('sora.openai.com')) {
+  const isSoraUrl = url.includes('sora.chatgpt.com') || url.includes('sora.openai.com');
+  const isOiioiiUrl = url.includes('api.oiioii.ai') || url.includes('oiioii.ai');
+
+  if (!isSoraUrl && !isOiioiiUrl) {
     return res.status(400).json({
-      error: 'Invalid Sora URL. URL must be from sora.chatgpt.com or sora.openai.com'
+      error: 'Invalid URL. URL must be from sora.chatgpt.com, sora.openai.com, or api.oiioii.ai'
     });
   }
 
   try {
     console.log(`Fetching video info for: ${url}`);
-    const result = await fetchFromClearSora(url);
 
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to fetch video info');
+    let result;
+    if (isOiioiiUrl) {
+      result = await fetchFromOiioii(url);
+    } else {
+      result = await fetchFromSora(url);
+    }
+
+    if (!result.videoUrl) {
+      throw new Error('Could not find video URL');
     }
 
     res.json({
       success: true,
       data: {
-        prompt: result.data.prompt,
-        viewCount: result.data.viewCount,
-        likeCount: result.data.likeCount,
-        thumbnailUrl: result.data.thumbnailUrl,
-        originalVideoUrl: result.data.originalVideoUrl,
-        noWatermarkUrl: result.data.noWatermarkUrl,
-        gifUrl: result.data.gifUrl,
-        mdVideoUrl: result.data.mdVideoUrl,
+        prompt: result.prompt,
+        title: result.title,
+        thumbnailUrl: result.thumbnailUrl,
+        videoUrl: result.videoUrl,
       },
     });
   } catch (error) {
     console.error('Fetch error:', error.message);
     res.status(500).json({
       error: error.message,
-      hint: 'The video might be private or the service is temporarily unavailable.',
+      hint: 'The video might be private or the page failed to load.',
     });
   }
 });
 
-// 비디오 다운로드 프록시 (ClearSora proxy_link 사용)
+// 비디오 다운로드 프록시
 app.get('/api/download', async (req, res) => {
-  const { token, type } = req.query;
-
-  if (!token) {
-    return res.status(400).json({ error: 'Token parameter required' });
-  }
-
-  try {
-    const downloadUrl = `https://www.clearsora.com/index.php?proxy_link=${encodeURIComponent(token)}`;
-    console.log(`Downloading from: ${downloadUrl}`);
-
-    const response = await axios({
-      method: 'GET',
-      url: downloadUrl,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Referer': 'https://www.clearsora.com/',
-        'Accept': '*/*',
-        'Accept-Encoding': 'identity',
-      },
-      responseType: 'stream',
-      timeout: 300000,
-      maxContentLength: Infinity,
-      maxBodyLength: Infinity,
-    });
-
-    const contentType = response.headers['content-type'] || 'video/mp4';
-    let filename = 'sora-video.mp4';
-
-    if (type === 'gif' || contentType.includes('gif')) {
-      filename = 'sora-video.gif';
-    } else if (type === 'thumbnail' || contentType.includes('image')) {
-      filename = 'sora-thumbnail.jpg';
-    }
-
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-
-    if (response.headers['content-length']) {
-      res.setHeader('Content-Length', response.headers['content-length']);
-    }
-
-    response.data.on('error', (err) => {
-      console.error('Stream error:', err.message);
-    });
-
-    response.data.pipe(res);
-  } catch (error) {
-    console.error('Download error:', error.message);
-    res.status(500).json({ error: 'Failed to download video: ' + error.message });
-  }
-});
-
-// 직접 URL 프록시
-app.get('/api/proxy', async (req, res) => {
-  const { url } = req.query;
+  const { url, type } = req.query;
 
   if (!url) {
     return res.status(400).json({ error: 'URL parameter required' });
   }
 
   try {
-    const response = await axios({
-      method: 'GET',
-      url: decodeURIComponent(url),
+    // URL is already decoded by express, don't decode again
+    const targetUrl = url;
+    console.log(`Downloading from: ${targetUrl.substring(0, 100)}...`);
+
+    const protocol = targetUrl.startsWith('https') ? https : http;
+
+    const proxyReq = protocol.get(targetUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
-        'Referer': 'https://sora.chatgpt.com/',
-      },
-      responseType: 'stream',
-      timeout: 120000,
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': '*/*',
+        'Accept-Encoding': 'identity',
+      }
+    }, (proxyRes) => {
+      // Check for error response
+      if (proxyRes.statusCode !== 200 && proxyRes.statusCode !== 206) {
+        console.error(`Proxy received status: ${proxyRes.statusCode}`);
+        res.status(proxyRes.statusCode).json({ error: `Remote server error: ${proxyRes.statusCode}` });
+        return;
+      }
+
+      const contentType = proxyRes.headers['content-type'] || 'video/mp4';
+      let filename = 'sora-video.mp4';
+
+      if (type === 'thumbnail' || contentType.includes('image')) {
+        filename = 'sora-thumbnail.webp';
+      }
+
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+      if (proxyRes.headers['content-length']) {
+        res.setHeader('Content-Length', proxyRes.headers['content-length']);
+      }
+
+      proxyRes.pipe(res);
     });
 
-    res.setHeader('Content-Type', response.headers['content-type'] || 'video/mp4');
-    res.setHeader('Content-Disposition', 'attachment; filename="sora-video.mp4"');
+    proxyReq.on('error', (err) => {
+      console.error('Proxy request error:', err.message);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to download video: ' + err.message });
+      }
+    });
 
-    if (response.headers['content-length']) {
-      res.setHeader('Content-Length', response.headers['content-length']);
-    }
-
-    response.data.pipe(res);
   } catch (error) {
-    console.error('Proxy error:', error.message);
-    res.status(500).json({ error: 'Failed to proxy video' });
+    console.error('Download error:', error.message);
+    res.status(500).json({ error: 'Failed to download video: ' + error.message });
   }
 });
 
 // 메인 페이지
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  if (browserInstance) {
+    await browserInstance.close();
+  }
+  process.exit();
 });
 
 app.listen(PORT, () => {
